@@ -1,0 +1,72 @@
+---
+title: "stl_lead_inequity"
+author: "Felicia Cruz"
+date: "8/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+```
+
+## Read in the data 
+```{r}
+stl_lead <- read_delim(here::here("data", "stl_blood_lead.csv"), delim = ";")
+```
+
+## Data exploration
+```{r}
+names(stl_lead)
+stl_lead <- stl_lead %>% clean_names()
+```
+
+
+```{r}
+stl_lead_prop <- stl_lead %>% mutate(prop_white = (white / total_pop) * 100)
+```
+
+## Create a scatterplot 
+```{r stl_lead_plot, fig.height = 4, fig_width = 6}
+stl_lead_prop <- stl_lead_prop %>% 
+  mutate(pct_elevated = str_replace(string = pct_elevated, pattern = ",", replacement = "."))
+# fixes the decimal places in pct_elevated
+
+stl_lead_plot <- ggplot(data = stl_lead_prop, aes(x = prop_white, y = as.numeric(pct_elevated))) + 
+  geom_point(aes(size = prop_white), 
+             show.legend = FALSE,
+             color = "magenta4",
+             alpha = 0.5) + 
+  labs(title = "High Blood Level Tests and Race by Census Tract", 
+       x = "% White",
+       y = "% Elevated")
+
+stl_lead_plot
+```
+
+## save as a png to figs
+```{r}
+ggsave(here::here("figs", "stl_lead_plot.png"), plot = stl_lead_plot, width = 6, height = 5)
+```
+There is a negative correlation between the proportion of white children in a census tract and the percentage of elevated blood lead levels. As the percentage of white people increases in each census tract, the proportion of elevated lead concentration in blood decreases. 
+
+
+## Create a histogram 
+```{r}
+hist <- ggplot(data = stl_lead_prop, aes(x = as.numeric(pct_elevated))) +
+  geom_histogram(color = "cyan4",
+                 fill = "magenta4",
+                 size = 1) + 
+  labs(title = "Elevated Blood Lead Levels",
+       x = "% Elevated")
+
+hist
+
+```
+## Export as a jpg to the figs folder 
+```{r}
+ggsave(here::here("figs", "lead_hist.jpg"), plot = hist, width = 6, height = 5)
+```
+
